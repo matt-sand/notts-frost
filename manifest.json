@@ -1,8 +1,10 @@
+
 {
   "name": "Below Freezing Tonight — Nottingham",
   "short_name": "Frost Cover",
   "description": "Check if it will be below freezing overnight in Nottingham and get frost cover advice.",
-  "start_url": ".",
+  "start_url": "/notts-frost/index.html",
+  "scope": "/notts-frost/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0f172a",
