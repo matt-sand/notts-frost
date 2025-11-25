@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Below Freezing Tonight — Nottingham</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
   <style>
     :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;line-height:1.4}
     body{max-width:820px;margin:40px auto;padding:20px;border-radius:12px;background:#f8fafc;color:#0f172a}
@@ -11,8 +13,8 @@
     .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(12,15,20,0.06)}
     .status{display:flex;align-items:center;gap:16px}
     .badge{font-weight:700;padding:8px 12px;border-radius:10px}
-    .yes{background:#ffeef0;color:#c0262e}
-    .no{background:#ecfdf5;color:#0f5132}
+    .cover-needed{background:#ffeef0;color:#c0262e}
+    .no-cover{background:#ecfdf5;color:#0f5132}
     .meta{margin-top:12px;color:#475569}
     table{width:100%;border-collapse:collapse;margin-top:12px}
     th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eef2f7}
@@ -44,6 +46,14 @@
       This page uses the free Open-Meteo API (no API key required).
     </footer>
   </div>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(err=>console.log('SW registration failed',err));
+  });
+}
+</script>
 
 <script>
 (async function(){
@@ -141,7 +151,7 @@
     if(minTemp===Infinity) throw new Error('No temperature data');
 
     const below = minTemp < 0;
-    badge.textContent = below ? 'YES — Below freezing' : 'NO — Not below freezing';
+    badge.textContent = below ? 'Put frost cover on' : 'No frost cover';
     badge.className = 'badge ' + (below ? 'cover-needed' : 'no-cover');
 
     const fetched = new Date().toLocaleString('en-GB',{timeZone:tz});
