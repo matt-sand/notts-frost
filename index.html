@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Below Freezing Tonight — Nottingham</title>
+  <title>Car frost predictor — Nottingham</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
   <style>
@@ -73,30 +73,30 @@
 </head>
 <body>
   <div class="card" id="app">
-    <h1>Will it be below freezing overnight in Nottingham, UK?</h1>
+    <h1>Will your car frost up tomorrow morning in Nottingham?</h1>
 
     <div id="advice" style="margin:12px 0; font-weight:600;"></div>
 
     <button id="addHome">Add to Home Screen</button>
 
-    <div id="explain" class="loading">Fetching forecast for Nottingham (Europe/London)</div>
+    <div id="explain" class="loading">Fetching forecast for Nottingham</div>
 
     <div class="meta" id="meta"></div>
 
     <table id="hourly" aria-live="polite" hidden>
       <thead>
         <tr>
-          <th>Time (Europe/London)</th>
+          <th>Time (Nottingham)</th>
           <th>Temp (°C)</th>
           <th>Dew Pt (°C)</th>
-          <th>RH (%)</th>
+          <th>Relative Humidity(%)</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
     <footer>
-      This page uses the free Open-Meteo API (no API key required).
+      - Matt S
     </footer>
   </div>
 
