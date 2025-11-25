@@ -19,23 +19,56 @@
       background: #f8fafc;
       color: #0f172a;
     }
-    h1 { font-size: 20px; margin: 0 0 8px; }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
     .card {
       background: #fff;
       padding: 18px;
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(12,15,20,0.06);
     }
-    .status { display: flex; align-items: center; gap: 16px; }
-    .badge { font-weight: 700; padding: 8px 12px; border-radius: 10px; }
-    .cover-needed { background: #ffeef0; color: #c0262e; }
-    .no-cover { background: #ecfdf5; color: #0f5132; }
-    .meta { margin-top: 12px; color: #475569; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eef2f7; }
-    footer { margin-top: 12px; color: #64748b; font-size: 13px; }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .badge {
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+    .cover-needed {
+      background: #ffeef0;
+      color: #c0262e;
+    }
+    .no-cover {
+      background: #ecfdf5;
+      color: #0f5132;
+    }
+    .meta {
+      margin-top: 12px;
+      color: #475569;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #eef2f7;
+    }
+    footer {
+      margin-top: 12px;
+      color: #64748b;
+      font-size: 13px;
+    }
     .loading { opacity: 0.7; }
     .error { color: #b91c1c; }
+
     button#addHome {
       display: none;
       margin: 12px 0;
@@ -49,6 +82,7 @@
       transition: background 0.3s;
     }
     button#addHome:hover { background: #1e293b; }
+
     @media (prefers-color-scheme: dark) {
       body { background: #0b1220; color: #e6eef8; }
       .card { background: #071226; }
@@ -59,7 +93,9 @@
   <div class="card" id="app">
     <h1>Will it be below freezing overnight in Nottingham, UK?</h1>
     <div id="advice" style="margin:12px 0; font-weight:600;"></div>
+
     <button id="addHome">Add to Home Screen</button>
+
     <div id="result" class="status loading">
       <div id="badge" class="badge">Checking…</div>
       <div id="explain">Fetching forecast for Nottingham (Europe/London)</div>
@@ -69,7 +105,12 @@
 
     <table id="hourly" aria-live="polite" hidden>
       <thead>
-        <tr><th>Time (Europe/London)</th><th>Temp (°C)</th><th>Dew Pt (°C)</th><th>RH (%)</th></tr>
+        <tr>
+          <th>Time (Europe/London)</th>
+          <th>Temp (°C)</th>
+          <th>Dew Pt (°C)</th>
+          <th>RH (%)</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -80,33 +121,33 @@
   </div>
 
 <script>
-  // Add to Home Screen functionality
-  let deferredPrompt;
-  const addHomeBtn = document.getElementById('addHome');
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    addHomeBtn.style.display = 'inline-block';
-  });
-  addHomeBtn.addEventListener('click', async () => {
-    addHomeBtn.style.display = 'none';
-    if(deferredPrompt){
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-    }
-  });
+// Add to Home Screen prompt logic
+let deferredPrompt;
+const addHomeBtn = document.getElementById('addHome');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  addHomeBtn.style.display = 'inline-block';
+});
+
+addHomeBtn.addEventListener('click', async () => {
+  addHomeBtn.style.display = 'none';
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+});
 </script>
 
 <script>
-  // Service worker registration
-  if('serviceWorker' in navigator){
-    window.addEventListener('load',()=>{
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('SW registered', reg))
-        .catch(err => console.log('SW registration failed', err));
-    });
-  }
+// Service worker registration
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
 </script>
 
 <script>
@@ -117,79 +158,136 @@
   const meta = document.getElementById('meta');
   const hourlyTable = document.getElementById('hourly');
   const tbody = hourlyTable.querySelector('tbody');
-
-  function setLoading(txt){ badge.textContent = txt; }
-  function clearLoading(){}
+  function setLoading(t){ badge.textContent = t; }
 
   try {
     setLoading('Preparing dates');
+
     const now = new Date();
     const fmt = new Intl.DateTimeFormat('en-GB',{
-      timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit',
-      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+      timeZone: tz,
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', second:'2-digit',
+      hour12:false
     });
-    const parts = Object.fromEntries(fmt.formatToParts(now).map(p=>[p.type,p.value]));
-    let tYear = parseInt(parts.year), tMonth = parseInt(parts.month), tDay = parseInt(parts.day), localHour = parseInt(parts.hour);
-    if(localHour >= 6){
-      const d = new Date(Date.UTC(tYear, tMonth-1, tDay));
-      d.setUTCDate(d.getUTCDate()+1);
-      tYear = d.getUTCFullYear();
-      tMonth = d.getUTCMonth()+1;
-      tDay = d.getUTCDate();
+
+    const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type,p.value]));
+
+    let tY = +parts.year, tM = +parts.month, tD = +parts.day, hour = +parts.hour;
+
+    if (hour >= 6) {
+      const d = new Date(Date.UTC(tY, tM-1, tD));
+      d.setUTCDate(d.getUTCDate() + 1);
+      tY = d.getUTCFullYear();
+      tM = d.getUTCMonth() + 1;
+      tD = d.getUTCDate();
     }
-    const pad = n=>String(n).padStart(2,'0');
-    const targetDateStr = `${tYear}-${pad(tMonth)}-${pad(tDay)}`;
+
+    const pad = n => String(n).padStart(2,'0');
+    const targetDate = `${tY}-${pad(tM)}-${pad(tD)}`;
 
     setLoading('Fetching forecast');
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,dewpoint_2m,relative_humidity_2m&timezone=${encodeURIComponent(tz)}&start_date=${targetDateStr}&end_date=${targetDateStr}`;
-    const resp = await fetch(url);
-    if(!resp.ok) throw new Error('Forecast fetch failed');
-    const data = await resp.json();
 
-    const times = data.hourly.time || [], temps = data.hourly.temperature_2m || [], dews = data.hourly.dewpoint_2m || [], hums = data.hourly.relative_humidity_2m || [];
-    if(!times.length) throw new Error('No hourly forecast available');
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&hourly=temperature_2m,dewpoint_2m,relative_humidity_2m` +
+      `&timezone=${encodeURIComponent(tz)}&start_date=${targetDate}&end_date=${targetDate}`;
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Forecast fetch failed');
+
+    const data = await resp.json();
+    const times = data.hourly.time || [];
+    const temps = data.hourly.temperature_2m || [];
+    const dews  = data.hourly.dewpoint_2m || [];
+    const hums  = data.hourly.relative_humidity_2m || [];
+
+    if (!times.length) throw new Error('No hourly forecast available');
 
     const overnight = [];
-    for(let i=0;i<times.length;i++){
-      const t=times[i], h=parseInt(t.slice(11,13));
-      if(t.startsWith(targetDateStr+'T') && h>=0 && h<=5) overnight.push({time:t,temp:temps[i],dew:dews[i],rh:hums[i]});
+
+    for (let i=0;i<times.length;i++){
+      const t = times[i];
+      if (t.startsWith(targetDate+'T')) {
+        const h = +t.slice(11,13);
+        if (h>=0 && h<=5) {
+          overnight.push({
+            time: t,
+            temp: temps[i],
+            dew:  dews[i],
+            rh:   hums[i]
+          });
+        }
+      }
     }
 
-    if(overnight.length===0){
-      explain.textContent='No overnight entries; showing first 12 hours instead.';
-      for(let i=0;i<Math.min(12,times.length);i++) overnight.push({time:times[i],temp:temps[i],dew:dews[i],rh:hums[i]});
+    if (overnight.length === 0) {
+      explain.textContent = 'No overnight entries; showing first 12 hours instead.';
+      for (let i=0;i<Math.min(12,times.length);i++){
+        overnight.push({
+          time: times[i],
+          temp: temps[i],
+          dew: dews[i],
+          rh: hums[i]
+        });
+      }
     } else {
-      explain.textContent=`Overnight window checked: ${targetDateStr} 00:00–05:59 (Europe/London)`;
+      explain.textContent = `Overnight window checked: ${targetDate} 00:00–05:59 (Europe/London)`;
     }
 
-    tbody.innerHTML='';
-    let minTemp=Infinity;
+    tbody.innerHTML = '';
+    let minTemp = Infinity;
+
     overnight.forEach(e=>{
       const tr=document.createElement('tr');
-      const tdTime=document.createElement('td'); tdTime.textContent = e.time.replace('T',' ');
-      const tdTemp=document.createElement('td'); tdTemp.textContent=(Math.round(e.temp*10)/10).toFixed(1);
-      const tdDew=document.createElement('td'); tdDew.textContent=(Math.round(e.dew*10)/10).toFixed(1);
-      const tdRH=document.createElement('td'); tdRH.textContent=e.rh;
-      tr.append(tdTime, tdTemp, tdDew, tdRH);
+
+      const td1=document.createElement('td');
+      td1.textContent=e.time.replace('T',' ');
+
+      const td2=document.createElement('td');
+      td2.textContent=(Math.round(e.temp*10)/10).toFixed(1);
+
+      const td3=document.createElement('td');
+      td3.textContent=(Math.round(e.dew*10)/10).toFixed(1);
+
+      const td4=document.createElement('td');
+      td4.textContent=e.rh;
+
+      tr.append(td1,td2,td3,td4);
       tbody.appendChild(tr);
-      if(e.temp<minTemp) minTemp=e.temp;
+
+      if(e.temp < minTemp) minTemp=e.temp;
     });
 
-    hourlyTable.hidden=false;
-    clearLoading();
-    if(minTemp===Infinity) throw new Error('No temperature data');
+    hourlyTable.hidden = false;
 
-    const below = minTemp<0;
-    badge.textContent = below?'Put frost cover on':'No frost cover';
-    badge.className='badge '+(below?'cover-needed':'no-cover');
+    const last = overnight.reduce((a,b)=> a.temp < b.temp ? a : b);
+    const temp = last.temp;
+    const dew  = last.dew;
+    const rh   = last.rh;
+
+    const dewGap = temp - dew;
+
+    // unified frost risk logic
+    const frostRisk =
+      (temp <= 2 && dewGap <= 1) ||
+      rh >= 85;
+
+    // Badge and recommendation now use SAME logic
+    badge.textContent = frostRisk ? 'Put frost cover on' : 'No frost cover';
+    badge.className = 'badge ' + (frostRisk ? 'cover-needed' : 'no-cover');
+
+    const advice = frostRisk
+      ? 'Recommendation: Put the frost cover on. Dew point and humidity indicate high frost potential.'
+      : 'Recommendation: Frost risk is low based on temperature, dew point, and humidity.';
+
+    document.getElementById('advice').textContent = advice;
 
     const fetched = new Date().toLocaleString('en-GB',{timeZone:tz});
-    const last = overnight.reduce((a,b)=> a.temp<b.temp?a:b);
-    const temp=last.temp, dew=last.dew, rh=last.rh, dewGap=temp-dew;
-    const frostRisk=(temp<=2 && dewGap<=1)||rh>=85;
-    const advice=frostRisk?'Recommendation: Put the frost cover on. Dew point and humidity indicate high frost potential.':'Recommendation: Frost risk is low based on temperature, dew point, and humidity.';
-    document.getElementById('advice').textContent = advice;
-    meta.innerHTML=`Minimum overnight temperature: <strong>${(Math.round(minTemp*10)/10).toFixed(1)} °C</strong>. Forecast fetched at ${fetched}.`;
+
+    meta.innerHTML =
+      `Minimum overnight temperature: <strong>${(Math.round(minTemp*10)/10).toFixed(1)} °C</strong>. ` +
+      `Forecast fetched at ${fetched}.`;
 
   } catch(err){
     badge.textContent='Error';
@@ -197,5 +295,6 @@
   }
 })();
 </script>
+
 </body>
 </html>
