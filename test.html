@@ -104,7 +104,7 @@
     width: 40px;
     height: 50px;
     background: pink;
-    border-radius: 50% 50% 50% 50%;
+    border-radius: 50%;
     bottom: -60px;
     animation: balloonRise 3s ease-out forwards;
     z-index: 2000;
@@ -137,7 +137,7 @@
 
     <h2>Select a date</h2>
     <input type="date" id="datePick" style="padding:8px; font-size:16px; width:100%; max-width:300px;">
-    <button id="checkBtn" style="margin-top:10px; padding:10px 16px; font-size:16px;">Check</button>
+    <button id="checkBtn" style="margin-top:10px; padding:10px 16px;">Check</button>
 
     <hr style="margin:20px 0;">
 
@@ -176,6 +176,7 @@ document.querySelectorAll("nav a").forEach(link => {
 /* ===============================================================
    SIMON'S TRUE 35-DAY ROTATION (OFF DAYS)
    =============================================================== */
+
 const rotaBase = new Date("2025-11-30");
 
 const offOffsets = new Set([
@@ -194,6 +195,7 @@ function isSimonOffOn(date){
   return diff >= 0 && offOffsets.has(diff % 35);
 }
 
+/* These two were missing earlier — required */
 function formatStatus(isOff){
   return isOff
     ? `<div class="status-bad">Simon is OFF</div>`
@@ -202,7 +204,17 @@ function formatStatus(isOff){
 
 function formatDate(d){
   return d.toLocaleDateString("en-GB", { weekday:"short", day:"2-digit", month:"short" });
-  }
+}
+
+/* Today + Tomorrow */
+const today = new Date();
+const tomorrow = new Date();
+tomorrow.setDate(today.getDate() + 1);
+
+document.getElementById("todayStatus").innerHTML =
+  `<strong>Today:</strong><br>${formatStatus(isSimonOffOn(today))}`;
+document.getElementById("tomorrowStatus").innerHTML =
+  `<strong>Tomorrow:</strong><br>${formatStatus(isSimonOffOn(tomorrow))}`;
 
 /* 14-day forecast */
 (function(){
@@ -235,7 +247,7 @@ function formatDate(d){
 
 <script>
 /* ===============================================================
-   DATE PICKER + POPUP + PARTY POPPERS / BALLOONS
+   DATE PICKER + POPUP + PARTY
    =============================================================== */
 
 const modal = document.getElementById("modalOverlay");
@@ -264,7 +276,6 @@ document.getElementById("checkBtn").onclick = () => {
   }
 };
 
-/* PARTY EFFECTS */
 function launchParty(){
   for(let i=0;i<40;i++){
     const conf = document.createElement("div");
