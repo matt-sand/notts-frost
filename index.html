@@ -240,19 +240,17 @@ if('serviceWorker' in navigator){
 
     hourlyTable.hidden = false;
 
-    // Frost risk logic
+    // ✔ Correct frost logic (only change)
     const last = overnight.reduce((a,b)=> a.temp < b.temp ? a : b);
-    const temp = last.temp, dew = last.dew, rh = last.rh;
+    const temp = last.temp, dew = last.dew;
     const dewGap = temp - dew;
 
-    const frostRisk =
-      (temp <= 2 && dewGap <= 1) ||
-      rh >= 85;
+    const frostRisk = temp <= 2 && dewGap <= 1;
 
     const advice =
       frostRisk
-        ? 'Recommendation: Put the frost cover on. Dew point and humidity indicate high frost potential.'
-        : 'Recommendation: Frost risk is low based on temperature, dew point, and humidity.';
+        ? 'Recommendation: Put the frost cover on. Conditions are right for windscreen frost.'
+        : 'Recommendation: Frost risk is low based on temperature and dew point.';
 
     document.getElementById('advice').textContent = advice;
 
