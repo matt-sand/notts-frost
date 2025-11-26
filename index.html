@@ -302,5 +302,26 @@ function launchParty(){
 }
 </script>
 
+  <script>
+// Add to Home Screen
+let deferredPrompt;
+const addHomeBtn=document.getElementById('addHome');
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  addHomeBtn.style.display='inline-block';
+});
+addHomeBtn.addEventListener('click',async()=>{
+  addHomeBtn.style.display='none';
+  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
+});
+</script>
+
+<script>
+// Service worker
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
+}
+</script>
+
 </body>
 </html>
