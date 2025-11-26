@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rota</title>
+<title>About</title>
 
 <style>
   body {
@@ -14,7 +14,6 @@
     overflow-x: hidden;
   }
 
-  /* Slide container */
   #slide {
     position: relative;
     padding: 32px 20px 100px 20px;
@@ -24,14 +23,8 @@
   .slide-in-right { animation-name: slideInRight; }
   .slide-in-left  { animation-name: slideInLeft; }
 
-  @keyframes slideInRight {
-    0% { opacity: 0; transform: translateX(40px); }
-    100%{ opacity:1; transform: translateX(0); }
-  }
-  @keyframes slideInLeft {
-    0% { opacity: 0; transform: translateX(-40px); }
-    100%{ opacity:1; transform: translateX(0); }
-  }
+  @keyframes slideInRight { 0%{opacity:0;transform:translateX(40px);}100%{opacity:1;transform:translateX(0);} }
+  @keyframes slideInLeft  { 0%{opacity:0;transform:translateX(-40px);}100%{opacity:1;transform:translateX(0);} }
 
   .card {
     background: white;
@@ -41,52 +34,30 @@
     margin-bottom: 20px;
   }
 
-  .status-good {
-    color: #0f5132;
-    background: #ecfdf5;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    display: inline-block;
-    margin-bottom: 6px;
-  }
-  .status-bad {
-    color: #c0262e;
-    background: #ffeef0;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    display: inline-block;
-    margin-bottom: 6px;
-  }
+  .status-good { color:#0f5132; background:#ecfdf5; padding:8px 12px; border-radius:8px; font-weight:600; display:inline-block; }
+  .status-bad  { color:#c0262e; background:#ffeef0; padding:8px 12px; border-radius:8px; font-weight:600; display:inline-block; }
 
   .forecast-item {
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    font-size: 15px;
+    padding:8px 12px;
+    border-radius:8px;
+    margin-bottom:6px;
+    font-size:15px;
   }
   .work { background:#ecfdf5; color:#0f5132; }
   .off  { background:#ffeef0; color:#c0262e; }
 
   nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 0;
-    font-size: 15px;
+    position:fixed; bottom:0; left:0; right:0;
+    background:#ffffff;
+    border-top:1px solid #e5e7eb;
+    display:flex; justify-content:space-around;
+    padding:10px 0;
+    font-size:15px;
   }
-  nav a {
-    text-decoration: none;
-    color: #0f172a;
-    font-weight: 600;
-  }
-  nav a.active { color: #1d4ed8; }
+  nav a { text-decoration:none; color:#0f172a; font-weight:600; }
+  nav a.active { color:#1d4ed8; }
 
-  @media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme:dark) {
     body { background:#0b1220; color:#e6eef8; }
     .card { background:#071226; }
     nav { background:#0b1220; border-top-color:#1e2633; }
@@ -94,6 +65,52 @@
     nav a.active { color:#60a5fa; }
     .forecast-item.work { background:#0a2f1f; color:#8ff4c8; }
     .forecast-item.off  { background:#3f0a0a; color:#ffb4b4; }
+  }
+
+  /* Modal */
+  #modalOverlay {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.4);
+    display:none; justify-content:center; align-items:center;
+    z-index:1000;
+  }
+  #modalBox {
+    background:white;
+    padding:20px;
+    border-radius:14px;
+    width:80%;
+    max-width:300px;
+    text-align:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.2);
+  }
+
+  /* Party poppers */
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: red;
+    top: -20px;
+    animation: confettiFall 3s linear forwards;
+    border-radius: 2px;
+    z-index: 2000;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(120vh) rotate(720deg); opacity:0; }
+  }
+
+  .balloon {
+    position: fixed;
+    width: 40px;
+    height: 50px;
+    background: pink;
+    border-radius: 50% 50% 50% 50%;
+    bottom: -60px;
+    animation: balloonRise 3s ease-out forwards;
+    z-index: 2000;
+  }
+  @keyframes balloonRise {
+    to { transform: translateY(-120vh); opacity:0; }
   }
 </style>
 </head>
@@ -103,133 +120,181 @@
 <div id="slide" class="slide-in-left">
 
   <div class="card">
-    <h1>Rota</h1>
+    <h1>About</h1>
 
-    <!-- TODAY / TOMORROW STATUS -->
     <div id="todayStatus"></div>
     <div id="tomorrowStatus" style="margin-top:8px;"></div>
 
-    <hr style="margin:20px 0; border:0; border-bottom:1px solid #e5e7eb;">
+    <hr style="margin:20px 0;">
 
-    <!-- 14-DAY FORECAST -->
-    <h2 style="margin-bottom:10px;">14-Day Work Forecast</h2>
+    <h2>14-Day Work Forecast (Simon)</h2>
     <div id="forecastList"></div>
 
-    <h2 style="margin-top:25px; margin-bottom:10px;">Next Day Simon Works</h2>
+    <h2 style="margin-top:25px;">Next Day Simon Works</h2>
     <div id="nextWork"></div>
 
-    <hr style="margin:20px 0; border:0; border-bottom:1px solid #e5e7eb;">
+    <hr style="margin:20px 0;">
+
+    <h2>Select a date</h2>
+    <input type="date" id="datePick" style="padding:8px; font-size:16px; width:100%; max-width:300px;">
+    <button id="checkBtn" style="margin-top:10px; padding:10px 16px; font-size:16px;">Check</button>
+
+    <hr style="margin:20px 0;">
 
     <p><a href="https://monzo.me/matthewsanders48/1.00?d=Pwa&h=WmeOsl">give me money thanks</a></p>
   </div>
 
 </div>
 
-<!-- Bottom Navigation -->
+<!-- Modal -->
+<div id="modalOverlay">
+  <div id="modalBox">
+    <div id="modalText"></div>
+    <br>
+    <button onclick="closeModal()" style="padding:8px 16px;">Close</button>
+  </div>
+</div>
+
 <nav>
   <a href="index.html" data-direction="right">Frost</a>
-  <a href="test.html" class="active" data-direction="left">Rota</a>
+  <a href="test.html" class="active" data-direction="left">About</a>
 </nav>
 
 <script>
-/* SLIDE TRANSITIONS */
 document.querySelectorAll("nav a").forEach(link => {
   link.addEventListener("click", e => {
     e.preventDefault();
     const dir = link.dataset.direction;
     const slide = document.getElementById("slide");
     slide.className = dir === "left" ? "slide-in-left" : "slide-in-right";
-    setTimeout(() => { window.location.href = link.href; }, 200);
+    setTimeout(() => window.location.href = link.href, 200);
   });
 });
 </script>
 
 <script>
 /* ===============================================================
-   SIMON'S 35-DAY REPEATING ROTA PATTERN
-   Base date: 30 Nov 2025
+   SIMON'S TRUE 35-DAY ROTATION (OFF DAYS)
    =============================================================== */
 
-const rotaBase = new Date("2025-11-30T00:00:00");
+const rotaBase = new Date("2025-11-30");
 
 const offOffsets = new Set([
-  0, 1, 2,       // 30 Nov, 1 Dec, 2 Dec
-  5, 6, 7, 8, 9, // 5–9 Dec
-  15, 16,        // 15–16 Dec
-  20, 21, 22,    // 20–22 Dec
-  27, 28,        // 27–28 Dec
-  33, 34         // 2–3 Jan
+  0,1,2,
+  5,6,7,8,9,
+  15,16,
+  20,21,22,
+  27,28,
+  33,34
 ]);
 
-function isSimonOffOn(date) {
+function isSimonOffOn(date){
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffMs = d - rotaBase;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays < 0) return false;
-  return offOffsets.has(diffDays % 35);
+  const diff = Math.floor((d - rotaBase) / 86400000);
+  return diff >= 0 && offOffsets.has(diff % 35);
 }
 
-function formatStatus(isOff) {
+function formatStatus(isOff){
   return isOff
     ? `<div class="status-bad">Simon is OFF</div>`
     : `<div class="status-good">Simon is working</div>`;
 }
 
-function formatDate(d) {
-  return d.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short"
-  });
+function formatDate(d){
+  return d.toLocaleDateString("en-GB", { weekday:"short", day:"2-digit", month:"short" });
 }
 
-/* TODAY + TOMORROW */
+/* Today + Tomorrow */
 const today = new Date();
 const tomorrow = new Date();
 tomorrow.setDate(today.getDate() + 1);
 
 document.getElementById("todayStatus").innerHTML =
-  `<strong>Today:</strong><br>` + formatStatus(isSimonOffOn(today));
-
+  `<strong>Today:</strong><br>${formatStatus(isSimonOffOn(today))}`;
 document.getElementById("tomorrowStatus").innerHTML =
-  `<strong>Tomorrow:</strong><br>` + formatStatus(isSimonOffOn(tomorrow));
+  `<strong>Tomorrow:</strong><br>${formatStatus(isSimonOffOn(tomorrow))}`;
 
-/* 14-DAY FORECAST */
-(function buildForecast(){
-  const listEl = document.getElementById("forecastList");
-  listEl.innerHTML = "";
-
-  for (let i = 0; i < 14; i++) {
+/* 14-day forecast */
+(function(){
+  const list = document.getElementById("forecastList");
+  for (let i=0;i<14;i++){
     const d = new Date();
-    d.setDate(today.getDate() + i);
-
+    d.setDate(today.getDate()+i);
     const isOff = isSimonOffOn(d);
-
     const row = document.createElement("div");
-    row.className = `forecast-item ${isOff ? "off" : "work"}`;
-    row.textContent = `${formatDate(d)} — ${isOff ? "OFF" : "Working"}`;
-
-    listEl.appendChild(row);
+    row.className = "forecast-item "+(isOff?"off":"work");
+    row.textContent = `${formatDate(d)} — ${isOff?"OFF":"Working"}`;
+    list.appendChild(row);
   }
 })();
 
-/* NEXT WORKING DAY */
-(function findNextWorkDay(){
+/* Next working day */
+(function(){
   const el = document.getElementById("nextWork");
-
-  for (let i = 1; i < 60; i++) {
+  for (let i=1;i<150;i++){
     const d = new Date();
-    d.setDate(today.getDate() + i);
-
-    if (!isSimonOffOn(d)) {
+    d.setDate(today.getDate()+i);
+    if(!isSimonOffOn(d)){
       el.textContent = `${formatDate(d)} — Simon is working`;
       return;
     }
   }
-
-  el.textContent = "No working day found in next 60 days (unlikely)";
+  el.textContent = "Unable to determine next working day.";
 })();
 </script>
 
+<script>
+/* ===============================================================
+   DATE PICKER + POPUP + PARTY POPPERS / BALLOONS
+   =============================================================== */
+
+const modal = document.getElementById("modalOverlay");
+const modalText = document.getElementById("modalText");
+
+function closeModal(){ modal.style.display="none"; }
+
+document.getElementById("checkBtn").onclick = () => {
+  const val = document.getElementById("datePick").value;
+  if(!val) return;
+
+  const d = new Date(val);
+  const isOff = isSimonOffOn(d);
+
+  modalText.innerHTML =
+    `${formatDate(d)}<br><br>` +
+    (isOff
+      ? `<span class="status-bad">Simon is OFF!</span>`
+      : `<span class="status-good">Simon is working</span>`
+    );
+
+  modal.style.display="flex";
+
+  if(isOff){
+    launchParty();
+  }
+};
+
+/* PARTY EFFECTS */
+function launchParty(){
+  for(let i=0;i<40;i++){
+    const conf = document.createElement("div");
+    conf.className="confetti";
+    conf.style.left = Math.random()*100+"vw";
+    conf.style.background = `hsl(${Math.random()*360},80%,60%)`;
+    document.body.appendChild(conf);
+    setTimeout(()=>conf.remove(),3000);
+  }
+
+  for(let i=0;i<6;i++){
+    const bal = document.createElement("div");
+    bal.className="balloon";
+    bal.style.left = Math.random()*100+"vw";
+    bal.style.background = `hsl(${Math.random()*360},70%,70%)`;
+    document.body.appendChild(bal);
+    setTimeout(()=>bal.remove(),3000);
+  }
+}
+</script>
+
 </body>
-    </html>
+</html>
