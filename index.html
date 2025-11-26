@@ -3,101 +3,107 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Car frost predictor — Nottingham</title>
+  <title>Car Frost Predictor — Nottingham</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
+
   <style>
     :root {
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
-      line-height: 1.4;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      line-height: 1.45;
     }
     body {
       max-width: 820px;
-      margin: 40px auto;
+      margin: 32px auto;
       padding: 20px;
-      border-radius: 12px;
       background: #f8fafc;
       color: #0f172a;
     }
-    h1 {
-      font-size: 20px;
-      margin: 0 0 8px;
-    }
     .card {
-      background: #fff;
-      padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(12,15,20,0.06);
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     }
-    .meta {
-      margin-top: 12px;
-      color: #475569;
+    h1 {
+      font-size: 22px;
+      margin: 0 0 12px;
     }
+    #badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .badge-good { background: #ecfdf5; color: #0f5132; }
+    .badge-bad  { background: #ffeef0; color: #c0262e; }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 12px;
+      margin-top: 16px;
+      font-size: 14px;
     }
     th, td {
       padding: 6px 8px;
       text-align: left;
-      border-bottom: 1px solid #eef2f7;
+      border-bottom: 1px solid #e2e8f0;
     }
-    footer {
-      margin-top: 12px;
-      color: #64748b;
-      font-size: 13px;
-    }
-    .loading { opacity: 0.7; }
-    .error { color: #b91c1c; }
 
-    button#addHome {
+    footer {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    #addHome {
       display: none;
-      margin: 12px 0;
+      margin: 10px 0 14px 0;
       padding: 8px 16px;
-      font-size: 14px;
       border-radius: 8px;
+      font-size: 14px;
       background: #0f172a;
       color: #fff;
       border: none;
       cursor: pointer;
-      transition: background 0.3s;
     }
-    button#addHome:hover { background: #1e293b; }
 
     @media (prefers-color-scheme: dark) {
       body { background: #0b1220; color: #e6eef8; }
       .card { background: #071226; }
+      table th, table td { border-bottom-color: #1e2633; }
     }
   </style>
 </head>
-<body>
-  <div class="card" id="app">
-    <h1>Will your car frost up tomorrow morning in Nottingham?</h1>
 
-    <div id="advice" style="margin:12px 0; font-weight:600;"></div>
+<body>
+  <div class="card">
+    <h1>Will your car frost up tomorrow morning?</h1>
+
+    <div id="badge" class="badge-good">Checking...</div>
+    <div id="advice" style="font-weight:600;margin-bottom:8px;"></div>
 
     <button id="addHome">Add to Home Screen</button>
 
-    <div id="explain" class="loading">Fetching forecast for Nottingham</div>
+    <div id="explain" style="margin:6px 0 10px 0;">Fetching forecast…</div>
+    <div id="meta"></div>
 
-    <div class="meta" id="meta"></div>
-
-    <table id="hourly" aria-live="polite" hidden>
+    <table id="hourly" hidden>
       <thead>
         <tr>
-          <th>Time (Nottingham)</th>
-          <th>Temp (°C)</th>
-          <th>Dew Pt (°C)</th>
-          <th>Relative Humidity(%)</th>
+          <th>Time</th>
+          <th>Temp °C</th>
+          <th>Dew °C</th>
+          <th>RH %</th>
+          <th>Wind m/s</th>
+          <th>Cloud %</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-    <footer>
-      - Matt S
-    </footer>
+    <footer>- Matt S</footer>
   </div>
 
 <script>
@@ -123,143 +129,136 @@ addHomeBtn.addEventListener('click', async () => {
 
 <script>
 // Service worker
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=> {
-    navigator.serviceWorker.register('sw.js');
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js");
   });
 }
 </script>
 
 <script>
-// Main logic
+// Main frost logic
 (async function(){
-  const lat = 52.95, lon = -1.15, tz = 'Europe/London';
-  const explain = document.getElementById('explain');
-  const meta = document.getElementById('meta');
-  const hourlyTable = document.getElementById('hourly');
-  const tbody = hourlyTable.querySelector('tbody');
+  const lat = 52.95, lon = -1.15, tz = "Europe/London";
+  const badge = document.getElementById("badge");
+  const advice = document.getElementById("advice");
+  const explain = document.getElementById("explain");
+  const meta = document.getElementById("meta");
+  const hourlyTable = document.getElementById("hourly");
+  const tbody = hourlyTable.querySelector("tbody");
 
-  function setLoading(t){ explain.textContent = t; }
+  function setBadge(text, good){
+    badge.textContent = text;
+    badge.className = good ? "badge-good" : "badge-bad";
+  }
 
   try {
-    setLoading('Preparing dates');
+    explain.textContent = "Preparing dates...";
 
     const now = new Date();
-    const fmt = new Intl.DateTimeFormat('en-GB',{
-      timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit',
-      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+    const fmt = new Intl.DateTimeFormat("en-GB",{
+      timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false
     });
 
     const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type,p.value]));
+    let y = +parts.year, m = +parts.month, d = +parts.day, hour = +parts.hour;
 
-    let tY = +parts.year, tM = +parts.month, tD = +parts.day, hour = +parts.hour;
-
-    if (hour >= 6) {
-      const d = new Date(Date.UTC(tY, tM-1, tD));
-      d.setUTCDate(d.getUTCDate() + 1);
-      tY = d.getUTCFullYear();
-      tM = d.getUTCMonth() + 1;
-      tD = d.getUTCDate();
+    if(hour >= 6){
+      const dt = new Date(Date.UTC(y,m-1,d));
+      dt.setUTCDate(dt.getUTCDate()+1);
+      y = dt.getUTCFullYear(); m = dt.getUTCMonth()+1; d = dt.getUTCDate();
     }
 
-    const pad = n => String(n).padStart(2,'0');
-    const targetDate = `${tY}-${pad(tM)}-${pad(tD)}`;
+    const pad = n => String(n).padStart(2,"0");
+    const dateStr = `${y}-${pad(m)}-${pad(d)}`;
 
-    setLoading('Fetching forecast…');
+    explain.textContent = "Fetching forecast…";
 
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,dewpoint_2m,relative_humidity_2m` +
-      `&timezone=${encodeURIComponent(tz)}&start_date=${targetDate}&end_date=${targetDate}`;
+      `&hourly=temperature_2m,dewpoint_2m,relative_humidity_2m,cloud_cover,wind_speed_10m` +
+      `&timezone=${encodeURIComponent(tz)}&start_date=${dateStr}&end_date=${dateStr}`;
 
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error('Forecast fetch failed');
-
     const data = await resp.json();
-    const times = data.hourly.time || [];
-    const temps = data.hourly.temperature_2m || [];
-    const dews  = data.hourly.dewpoint_2m || [];
-    const hums  = data.hourly.relative_humidity_2m || [];
 
-    if (!times.length) throw new Error('No hourly forecast available');
+    const times = data.hourly.time;
+    const temps = data.hourly.temperature_2m;
+    const dews  = data.hourly.dewpoint_2m;
+    const hums  = data.hourly.relative_humidity_2m;
+    const winds = data.hourly.wind_speed_10m;
+    const clouds= data.hourly.cloud_cover;
 
     const overnight = [];
-
-    for (let i=0;i<times.length;i++){
-      const t = times[i];
-      if (t.startsWith(targetDate+'T')) {
-        const h = +t.slice(11,13);
-        if (h>=0 && h<=5) {
+    for(let i=0;i<times.length;i++){
+      if(times[i].startsWith(dateStr+"T")){
+        const h = +times[i].slice(11,13);
+        if(h>=0 && h<=5){
           overnight.push({
-            time: t,
+            time: times[i],
             temp: temps[i],
             dew:  dews[i],
-            rh:   hums[i]
+            rh:   hums[i],
+            wind: winds[i],
+            cloud: clouds[i]
           });
         }
       }
     }
 
-    if (overnight.length === 0) {
-      explain.textContent = 'No overnight entries; showing first 12 hours instead.';
-      for (let i=0;i<Math.min(12,times.length);i++){
-        overnight.push({
-          time: times[i],
-          temp: temps[i],
-          dew: dews[i],
-          rh: hums[i]
-        });
-      }
-    } else {
-      explain.textContent = `Overnight window checked: ${targetDate} 00:00–05:59 (Europe/London)`;
-    }
-
-    tbody.innerHTML = '';
-    let minTemp = Infinity;
-
-    overnight.forEach(e=>{
-      const tr=document.createElement('tr');
-
-      const td1=document.createElement('td');
-      td1.textContent=e.time.replace('T',' ');
-
-      const td2=document.createElement('td');
-      td2.textContent=(Math.round(e.temp*10)/10).toFixed(1);
-
-      const td3=document.createElement('td');
-      td3.textContent=(Math.round(e.dew*10)/10).toFixed(1);
-
-      const td4=document.createElement('td');
-      td4.textContent=e.rh;
-
-      tr.append(td1,td2,td3,td4);
-      tbody.appendChild(tr);
-
-      if(e.temp < minTemp) minTemp=e.temp;
-    });
-
+    tbody.innerHTML = "";
     hourlyTable.hidden = false;
 
-    // ✔ Correct frost logic (only change)
-    const last = overnight.reduce((a,b)=> a.temp < b.temp ? a : b);
-    const temp = last.temp, dew = last.dew;
+    let minTemp = Infinity;
+    let coldestHour = null;
+
+    overnight.forEach(o=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${o.time.replace("T"," ")}</td>
+        <td>${o.temp.toFixed(1)}</td>
+        <td>${o.dew.toFixed(1)}</td>
+        <td>${o.rh}</td>
+        <td>${o.wind.toFixed(1)}</td>
+        <td>${o.cloud}</td>
+      `;
+      tbody.appendChild(tr);
+
+      if(o.temp < minTemp){
+        minTemp = o.temp;
+        coldestHour = o;
+      }
+    });
+
+    const temp = coldestHour.temp;
+    const dew = coldestHour.dew;
     const dewGap = temp - dew;
+    const wind = coldestHour.wind;
+    const cloud = coldestHour.cloud;
 
-    const frostRisk = temp <= 2 && dewGap <= 1;
+    // Improved frost prediction model
+    const frostRisk =
+      temp <= 2 &&
+      dewGap <= 1 &&
+      wind <= 3 &&
+      cloud <= 40;
 
-    const advice =
-      frostRisk
-        ? 'Recommendation: Put the frost cover on. Conditions are right for windscreen frost.'
-        : 'Recommendation: Frost risk is low based on temperature and dew point.';
+    if(frostRisk){
+      setBadge("Frost Likely", false);
+      advice.textContent = "Put the frost cover on. Conditions are ideal for windscreen frost (cold, clear, calm).";
+    } else {
+      setBadge("No Frost Expected", true);
+      advice.textContent = "Frost risk is low. Temperatures or sky/wind conditions are not suitable for frost.";
+    }
 
-    document.getElementById('advice').textContent = advice;
+    const fetched = new Date().toLocaleString("en-GB",{timeZone:tz});
+    meta.textContent = `Coldest hour: ${coldestHour.time.replace("T"," ")}. Forecast fetched at ${fetched}.`;
 
-    const fetched = new Date().toLocaleString('en-GB',{timeZone:tz});
-    meta.textContent =
-      `Minimum overnight temperature: ${(Math.round(minTemp*10)/10).toFixed(1)} °C. ` +
-      `Forecast fetched at ${fetched}.`;
+    explain.textContent = `Checked 00:00–05:59 for ${dateStr} (Nottingham)`;
 
   } catch(err){
+    setBadge("Error", false);
     explain.textContent = err.message;
   }
 })();
